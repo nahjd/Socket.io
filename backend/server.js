@@ -14,13 +14,18 @@ const io = new Server(server, {
     origin: "*",
   }
 });
+let messages = []; // Qalıcı mesajlar burda saxlanacaq
 
 io.on('connection', (socket) => {
   console.log('Yeni istifadəçi qoşuldu:', socket.id);
 
- socket.on("chatMessage", (msgObj) => {
-  io.emit("chatMessage", msgObj);
-});
+   // Yeni istifadəçiyə əvvəlki mesajları göndər
+  socket.emit("initialMessages", messages);
+
+socket.on("chatMessage", (msg) => {
+    messages.push(msg); // Mesajı array-a əlavə et
+    io.emit("chatMessage", msg); // Hamıya göndər
+  });
 
 
   socket.on('disconnect', () => {

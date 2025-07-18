@@ -10,15 +10,20 @@ function App() {
   const [username, setUsername] = useState("");
   const [submitted, setSubmitted] = useState(false);
 
-  useEffect(() => {
-    socket.on("chatMessage", (msgObj) => {
-      setMessages((prev) => [...prev, msgObj]);
-    });
+ useEffect(() => {
+  socket.on("initialMessages", (allMessages) => {
+    setMessages(allMessages);
+  });
+
+   socket.on("chatMessage", (msgObj) => {
+    setMessages(prev => [...prev, msgObj]);
+  });
 
     return () => {
-      socket.off("chatMessage");
-    };
-  }, []);
+    socket.off("initialMessages");
+    socket.off("chatMessage");
+  };
+}, []);
 
   const sendMessage = (e) => {
     e.preventDefault();
