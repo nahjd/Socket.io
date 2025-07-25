@@ -4,12 +4,19 @@ const { Server } = require('socket.io');
 const cors = require('cors');
 
 const app = express();
-app.use(cors());
-// app.use(express.static('public')); // frontend varsa bunu aç
+app.use(cors({
+  origin: 'https://nnakosocket.vercel.app',  // frontend saytının URL-i
+  methods: ['GET', 'POST'],
+  credentials: true
+}));
 
 const server = http.createServer(app);
-const io = new Server(server, {
-  cors: { origin: "*" }
+const io = require('socket.io')(server, {
+  cors: {
+    origin: "https://nnakosocket.vercel.app",
+    methods: ["GET", "POST"],
+    credentials: true
+  }
 });
 
 const rooms = {};
