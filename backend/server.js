@@ -4,17 +4,19 @@ const { Server } = require('socket.io');
 const cors = require('cors');
 
 const app = express();
+
 app.use(cors({
-  origin: 'https://nnakosocket.vercel.app',  // frontend saytının URL-i
+  origin: ['https://nnakosocket.vercel.app'], // buraya frontend domainini yaz
   methods: ['GET', 'POST'],
   credentials: true
 }));
 
 const server = http.createServer(app);
-const io = require('socket.io')(server, {
+
+const io = new Server(server, {
   cors: {
-    origin: "https://nnakosocket.vercel.app",
-    methods: ["GET", "POST"],
+    origin: ['https://nnakosocket.vercel.app'], // frontend adresi
+    methods: ['GET', 'POST'],
     credentials: true
   }
 });
@@ -25,8 +27,7 @@ const onlineUsers = {};
 io.on('connection', (socket) => {
   console.log("Yeni istifadəçi:", socket.id);
 
-  socket.on("joinRoom", ({ roomCode, username, avatar, isGroup, chatType }) => {
-    // Fərdi çatda artıq 2 nəfər varsa, daxil olmağa icazə vermə
+  socket.on("joinRoom", ({ roomCode, username, avatar = "", isGroup, chatType }) => {
     if (chatType === "private" && io.sockets.adapter.rooms.get(roomCode)?.size >= 2) {
       socket.emit("roomFull", "Bu şəxsi otağa artıq iki nəfər qoşulub.");
       return;
@@ -52,11 +53,11 @@ io.on('connection', (socket) => {
 
   socket.on("chatMessage", ({ roomCode, username, text }) => {
     const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    const avatar = socket.data.avatar;
+    const avatar = socket.data?.avatar || "";
     const msg = { username, text, time, avatar };
 
     if (rooms[roomCode].length > 100) {
-      rooms[roomCode].shift(); // çox mesaj varsa ən köhnəsini sil
+      rooms[roomCode].shift();
     }
 
     rooms[roomCode].push(msg);
@@ -86,7 +87,8 @@ io.on('connection', (socket) => {
   });
 });
 
-const PORT = process.env.PORT || 3000;
+// Deploy üçün aşağıdakı hissəni dəyiş:
+const PORT = process.env.PORT || 7070;
 server.listen(PORT, () => {
-  console.log(`Server http://localhost:${PORT} ünvanında işləyir`);
+  console.log(`✅ Server işləyir: http://localhost:${PORT}`);
 });

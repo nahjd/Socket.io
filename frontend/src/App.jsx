@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { io } from "socket.io-client";
 import "./App.css";
 
-const socket = io("https://socket-io-1-p8mv.onrender.com/");
+const socket = io("https://socket-io-1-p8mv.onrender.com/"); // server URL
 
 function App() {
   const [message, setMessage] = useState("");
@@ -16,20 +16,12 @@ function App() {
   const typingTimeout = useRef(null);
   const messagesEndRef = useRef(null);
 
-  // Socket event listeners — roomFull alert
   useEffect(() => {
     socket.on("roomFull", (msg) => {
       alert(msg);
       setSubmitted(false);
     });
 
-    return () => {
-      socket.off("roomFull");
-    };
-  }, []);
-
-  // Main socket event listeners
-  useEffect(() => {
     socket.on("initialMessages", (allMessages) => {
       setMessages(allMessages);
     });
@@ -51,6 +43,7 @@ function App() {
     });
 
     return () => {
+      socket.off("roomFull");
       socket.off("initialMessages");
       socket.off("chatMessage");
       socket.off("onlineUsers");
@@ -59,7 +52,6 @@ function App() {
     };
   }, []);
 
-  // Scroll messages into view on new message
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
@@ -80,7 +72,13 @@ function App() {
   const handleJoin = (e) => {
     e.preventDefault();
     if (username.trim() && roomCode.trim()) {
-      socket.emit("joinRoom", { roomCode, username, chatType });
+      socket.emit("joinRoom", {
+        roomCode,
+        username,
+        chatType,
+        avatar: "",
+        isGroup: chatType === "group"
+      });
       setSubmitted(true);
     }
   };
@@ -144,9 +142,7 @@ function App() {
         </form>
       ) : (
         <>
-          <h2>
-            🗨️ Otaq: {roomCode} ({chatType === "group" ? "Qrup" : "Şəxsi"})
-          </h2>
+          <h2>🗨️ Otaq: {roomCode} ({chatType === "group" ? "Qrup" : "Şəxsi"})</h2>
           <div className="online-list">
             <strong>Online:</strong>{" "}
             {onlineUsers.map((user, i) => (
@@ -158,12 +154,7 @@ function App() {
 
           <ul className="messages">
             {messages.map((msg, i) => (
-              <li
-                key={i}
-                className={`message-bubble ${
-                  msg.username === username ? "own" : ""
-                }`}
-              >
+              <li key={i} className={`message-bubble ${msg.username === username ? "own" : ""}`}>
                 <div className="profile">
                   <div
                     className="avatar"
